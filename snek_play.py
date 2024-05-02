@@ -1,13 +1,15 @@
 import gym
 from stable_baselines3 import A2C, PPO
 import os
+from snakeenv import SnekEnv
+import time as time
 
-
-env = gym.make("LunarLander-v2", render_mode="rgb_array")
+# env = gym.make("LunarLander-v2", render_mode="rgb_array")
+env = SnekEnv()
 env.reset()
 
-models_dir = "models/PPO-1714664502"
-model_path = f"{models_dir}/470000.zip"
+models_dir = "models/1714680742"
+model_path = f"{models_dir}/70000.zip"
 
 model = PPO.load(model_path, env=env)
 
@@ -29,6 +31,7 @@ for ep in range(episodes):
         action, _state = model.predict(obs, deterministic=True)
         obs, reward, done, info = vec_env.step(action)
         vec_env.render("human")
+        time.sleep(0.1)
 
 
 env.close()
