@@ -1,0 +1,67 @@
+<?xml version="1.0" ?>
+
+<mujoco model="euc">
+  <!-- XACRO PARAMETERS -->
+  <!-- rando stuff -->
+  <!-- Body parameters -->
+  <!--INERTIA PROB TOO HIGH, maybe make this a pointish mass-->
+  <!-- but is it tho -->
+  <!-- update -->
+  <!-- but is it tho -->
+  <!--GTT: Grand Theft Toe-->
+  <!-- XACRO MACROS -->
+  <compiler angle="radian" autolimits="true"/>
+  <option gravity="0 0 -9.81" timestep="0.001">
+    <!-- https://github.com/deepmind/mujoco/issues/941 -->
+    <flag contact="enable" energy="enable" sensornoise="enable"/>
+  </option>
+  <default>
+    <geom conaffinity="0" contype="4"/>
+    <!-- condim='1' solref='0.005 1' solimp ="0.9 0.95 0.001 0.5 2"/>-->
+  </default>
+  <asset>
+    <texture builtin="gradient" height="512" rgb1="0.3 0.5 0.7" rgb2="0 0 0" type="skybox" width="512"/>
+    <texture builtin="checker" height="512" mark="cross" markrgb=".8 .8 .8" name="texplane" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" type="2d" width="512"/>
+    <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+    <material name="matplane" reflectance="0.3" texrepeat="1 1" texture="texplane" texuniform="true"/>
+    <material name="matgeom" rgba="0.8 0.6 .4 1" texture="texgeom" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <geom conaffinity="4" contype="2" material="matplane" name="floor" pos="0 0 0" size="0 0 .25" type="plane"/>
+    <light cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1" pos="0 0 1.3" specular=".1 .1 .1"/>
+
+
+
+    <body name="body" pos="0 0 3">
+      <joint name="FLOATING" type="free" />
+      <geom mass="45" name="body" pos="0 0 0" rgba="0.88 0.88 0.88 1.0" size="0.25 0.5" type="cylinder"/>
+      <!-- front_back_sign:=1 left_right_sign:=1" -->
+      <body name="intermediate" pos="0 0 -0.5">
+        <joint axis="0 0 1" damping="0.02" name="TWIST" pos="0 0 -0.5" range="-0.1 0.1"/>
+        <geom mass="1" name="intermediate" pos="0 0 0" rgba="0 1.0 0 1" size="0.04 0.05" type="cylinder"/>
+        <body name="ankle">
+          <joint type="slide" axis="0 0 1" name="ANKLE" pos="0 0 -0.2" range="-0.1 0.1"/>
+          <geom mass="25" name="ankle" pos="0 0 -0.2" quat="1 0 0 0" rgba="0 0 1.0 1" size="0.05 0.25" type="cylinder"/>
+          <body name="wheel" pos="0 0 -0.5">
+            <joint axis="0 1 0" damping="0.02" name="WHEEL" pos="0 0 0"/>
+            <geom mass="5" name="wheel" pos="0 0 0" quat="0.707107 0.707107 0 0" rgba="0 0 0 1" size="0.3 0.03" type="cylinder"/>
+          </body>
+        </body>
+      <site name="IMU" quat="1 0 0 0"/>
+      </body>
+      <!-- quat cuz reorienting IMU to match (i think) real life moteus pi3hat imu orientation-->
+      <!-- <site name="IMU"/> -->
+    </body>
+  </worldbody>
+  <actuator>
+    <general joint="TWIST" name="TWIST_act" forcelimited="true" forcerange="-200 200" ctrlrange="-1 1" gainprm="1000 0 0"/>
+    <general joint="ANKLE" name="ANKLE_act" forcelimited="true" forcerange="-2000 2000" ctrlrange="-1 1" gainprm="1000 0 0"/>
+    <general joint="WHEEL" name="WHEEL_act" forcelimited="true" forcerange="-100 100" ctrlrange="-1 1" gainprm="1000 0 0"/>
+  </actuator>
+  <sensor>
+    <accelerometer name="ACCEL" site="IMU"/>
+    <gyro name="GYRO" site="IMU"/>
+    <framequat name="QUAT" objname="IMU" objtype="site"/>
+    <!-- <subtreecom name="COM" body="base"/> -->
+  </sensor>
+</mujoco>
