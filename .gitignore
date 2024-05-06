@@ -1,0 +1,10 @@
+__pycache__/
+.DS_Store
+
+
+# Ignore trained models
+*.zip
+
+# Ignore logs
+logs/
+eval_logs/
