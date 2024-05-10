@@ -36,12 +36,11 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         self.step_number = 0
         self.episode_len = episode_len
 
-        self.v_des = np.array([0.4, 0.0, 0.0])
+        self.v_des = np.array([0.0, 0.0, 0.0])
 
-        self.orientation_reward_weight = 1
+        self.orientation_reward_weight = 10
         self.velocity_reward_weight = 0.5 
         self.control_cost_weight = 0.1
-        self.posture_cost_weight = 0.08
 
     def orientation_reward(self):
         orientation = self.data.qpos[3:7]
@@ -54,10 +53,6 @@ class EucEnv(MujocoEnv, utils.EzPickle):
     def control_cost(self, action):
         # return self.control_cost_weight * np.sum(np.square(self.data.ctrl))
         return self.control_cost_weight * np.sum(np.abs(self.data.ctrl))
-
-    def posture_cost(self):
-        return self.posture_cost_weight * np.sum(np.square(self.data.qpos[7:]))
-
 
     # determine the reward depending on observation or other properties of the simulation
     def step(self, a):
@@ -76,8 +71,7 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         ## Reward the quadruped for traveling in x
         reward = self.velocity_reward() \
                 + self.orientation_reward() \
-                - self.control_cost(a) \
-                - self.posture_cost() 
+                - self.control_cost(a) 
                 
         # print("\n qpos:", self.data.qpos)
         # print("\n reward:", reward)
@@ -102,7 +96,7 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         ## Initialize qpos as zero
         qpos = np.zeros(self.model.nq)
         ## Make sure it starts above ground
-        qpos[2] = 2
+        qpos[2] = 1.7
         qpos[3:7] = [1, 0, 0, 0]
 
 
