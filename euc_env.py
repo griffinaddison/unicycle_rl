@@ -38,8 +38,8 @@ class EucEnv(MujocoEnv, utils.EzPickle):
 
         self.v_des = np.array([0.0, 0.0, 0.0])
 
-        self.orientation_reward_weight = 10
-        self.velocity_reward_weight = 0.5 
+        self.orientation_reward_weight = 1
+        self.velocity_reward_weight = 0.0 
         self.control_cost_weight = 0.1
 
     def orientation_reward(self):
