@@ -25,7 +25,7 @@
 #         writer.append_data(frame)
 import gym
 from stable_baselines3 import A2C, PPO, SAC
-from doq_quadruped_env import DoqQuadrupedEnv
+from euc_env import EucEnv
 from stable_baselines3.common.env_checker import check_env
 import os
 import time
@@ -45,7 +45,7 @@ def train():
     # if not os.path.exists(logdir):
     #     os.makedirs(logdir)
 
-    env = DoqQuadrupedEnv(render_mode="rgb_array")
+    env = EucEnv(render_mode="rgb_array")
     check_env(env)
     env.reset()
 
@@ -72,7 +72,7 @@ def train():
 # env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
 def test(model_path):
-    env = DoqQuadrupedEnv(render_mode="human")
+    env = EucEnv(render_mode="human")
     env.reset()
 
     # models_dir = "models/SAC-1714768282"

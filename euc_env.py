@@ -28,7 +28,7 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         # load your MJCF model with env and choose frames count between actions
         MujocoEnv.__init__(
             self,
-            os.path.abspath("assets/doq.xml"),
+            os.path.abspath("assets/euc.xml"),
             5, ## TODO: update frame count? what is this?
             observation_space=observation_space,
             **kwargs
@@ -44,6 +44,9 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         self.posture_cost_weight = 0.08
 
     def orientation_reward(self):
+        orientation = self.data.qpos[3:7]
+        orientation_des = np.array([1, 0, 0, 0])
+        return self.orientation_reward_weight * np.dot(orientation, orientation_des)
 
     def velocity_reward(self):
         return self.velocity_reward_weight * LA.norm(self.v_des - self.data.qvel[0:3])
@@ -58,9 +61,8 @@ class EucEnv(MujocoEnv, utils.EzPickle):
 
     # determine the reward depending on observation or other properties of the simulation
     def step(self, a):
-        # reward = 1.0
-        ## Check if the action is valid
-        assert len(a) == 8
+        # Check if the action is valid
+        assert len(a) == 3
         # Make sure its not infinite or nan or somehting
         for i in a: 
             assert not math.isnan(i)
@@ -75,8 +77,8 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         reward = self.velocity_reward() \
                 + self.orientation_reward() \
                 - self.control_cost(a) \
-                - self.posture_cost() \
-                - self.velocity_cost_weight * np.abs(self.data.qvel[7:]).mean()
+                - self.posture_cost() 
+                
         # print("\n qpos:", self.data.qpos)
         # print("\n reward:", reward)
 
