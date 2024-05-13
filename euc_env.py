@@ -59,9 +59,11 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         # Check if the action is valid
         assert len(a) == 3
         # Make sure its not infinite or nan or somehting
+
         for i in a: 
             assert not math.isnan(i)
             assert not math.isinf(i)
+            # print(f"\n str(type(i)) {str(type(i))}")
             assert str(type(i)) == "<class 'numpy.float32'>"
 
 

@@ -1,36 +1,12 @@
-# from stable_baselines3 import SAC
-# from doq_quadruped_env import DoqQuadrupedEnv
-# import cv2
-# import imageio
-#
-# env = DoqQuadrupedEnv(render_mode="rgb_array")
-# model = SAC.load("doq_quadruped_env.zip")
-#
-# obs, info = env.reset()
-# frames = []
-# for _ in range(500):
-#     action, _states = model.predict(obs, deterministic=True)
-#     obs, reward, done, truncated, info = env.step(action)
-#     image = env.render()
-#     if _ % 5 == 0:
-#         frames.append(image)
-#     cv2.imshow("image", image)
-#     cv2.waitKey(100)
-#     if done or truncated:
-#         obs, info = env.reset()
-
-# uncomment to save result as gif
-# with imageio.get_writer("media/test.gif", mode="I") as writer:
-#     for idx, frame in enumerate(frames):
-#         writer.append_data(frame)
-import gym
+import gymnasium as gym
 from stable_baselines3 import A2C, PPO, SAC
-from euc_env import EucEnv
 from stable_baselines3.common.env_checker import check_env
 import os
 import time
 import argparse
 
+from euc_env import EucEnv
+from wbc_wrapper import WbcWrapper
 
 def train():
     
@@ -46,6 +22,11 @@ def train():
     #     os.makedirs(logdir)
 
     env = EucEnv(render_mode="rgb_array")
+
+    ## Wrap base environment with wbc wrapper
+    env = WbcWrapper(env)
+
+
     check_env(env)
     env.reset()
 
@@ -72,7 +53,10 @@ def train():
 # env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
 def test(model_path):
+
     env = EucEnv(render_mode="human")
+    env = WbcWrapper(env)
+
     env.reset()
 
     # models_dir = "models/SAC-1714768282"
