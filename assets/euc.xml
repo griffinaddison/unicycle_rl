@@ -40,7 +40,7 @@
         <joint axis="0 0 1" damping="0.02" name="TWIST" pos="0 0 -0.5" range="-0.1 0.1"/>
         <geom mass="1" name="intermediate" pos="0 0 0" rgba="0 1.0 0 1" size="0.04 0.05" type="cylinder"/>
         <body name="ankle">
-          <joint type="slide" axis="0 0 1" name="ANKLE" pos="0 0 -0.2" range="-0.1 0.1"/>
+          <joint type="slide" axis="0 0 1" name="HOP" pos="0 0 -0.2" range="-0.1 0.1"/>
           <geom mass="25" name="ankle" pos="0 0 -0.2" quat="1 0 0 0" rgba="0 0 1.0 1" size="0.05 0.25" type="cylinder"/>
           <body name="wheel" pos="0 0 -0.5">
             <joint axis="0 1 0" damping="0.02" name="WHEEL" pos="0 0 0"/>
@@ -54,9 +54,9 @@
     </body>
   </worldbody>
   <actuator>
-    <general joint="TWIST" name="TWIST_act" forcelimited="true" forcerange="-200 200" ctrlrange="-1 1" gainprm="1000 0 0"/>
-    <general joint="ANKLE" name="ANKLE_act" forcelimited="true" forcerange="-2000 2000" ctrlrange="-1 1" gainprm="1000 0 0"/>
-    <general joint="WHEEL" name="WHEEL_act" forcelimited="true" forcerange="-100 100" ctrlrange="-1 1" gainprm="1000 0 0"/>
+    <general joint="TWIST" name="TWIST_act" forcelimited="true" forcerange="-500 500" ctrlrange="-1 1" gainprm="1000 0 0"/>
+    <general joint="HOP" name="HOP_act" forcelimited="true" forcerange="-2000 2000" ctrlrange="-1 1" gainprm="1000 0 0"/>
+    <general joint="WHEEL" name="WHEEL_act" forcelimited="true" forcerange="-500 500" ctrlrange="-1 1" gainprm="1000 0 0"/>
   </actuator>
   <sensor>
     <accelerometer name="ACCEL" site="IMU"/>
