@@ -22,8 +22,6 @@ def train():
     #     os.makedirs(logdir)
 
     env = EucEnv(render_mode="rgb_array")
-
-    ## Wrap base environment with wbc wrapper
     env = WbcWrapper(env)
 
 
