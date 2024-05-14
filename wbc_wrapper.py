@@ -15,8 +15,13 @@ class WbcWrapper(gym.Wrapper):
         action_task_space_dim = 6
 
         ## TODO: check low and hi
-        self.action_space = gym.spaces.Box(low=-0.1, high=0.1, shape=(action_task_space_dim,), dtype=np.float32)
+        cart_accel_limit = 18.0 
+        ang_accel_limit = 10.0 
+        lows = np.array([-cart_accel_limit, -cart_accel_limit, -cart_accel_limit, -ang_accel_limit, -ang_accel_limit, -ang_accel_limit])
+        highs = np.array([cart_accel_limit, cart_accel_limit, cart_accel_limit, ang_accel_limit, ang_accel_limit, ang_accel_limit])
+        self.action_space = gym.spaces.Box(low=lows, high=highs, dtype=np.float32)
 
+        # self.action_space = gym.spaces.Box(low=-18.0, high=18.0, shape=(action_task_space_dim,), dtype=np.float32)
         self.prev_action_joint_space = np.zeros(self.model.nu, dtype=np.float32)
 
 
@@ -112,12 +117,12 @@ class WbcWrapper(gym.Wrapper):
 
 
         ## Assemble the inequality constraint
-        mu = 0.8
+        mu = 1.0
         min_normal_force = 0.0
         ## TODO: change tau max
-        tau_max_twist = 200.0
+        tau_max_twist = 500.0
         tau_max_hop = 2000.0
-        tau_max_roll = 100.0
+        tau_max_roll = 500.0
 
         mu_over_root2 = (np.sqrt(2) / 2) * mu
         G_f = np.array([
