@@ -38,14 +38,17 @@ class EucEnv(MujocoEnv, utils.EzPickle):
 
         self.v_des = np.array([0.0, 0.0, 0.0])
 
-        self.orientation_reward_weight = 1
+        self.orientation_reward_weight = 10
         self.velocity_reward_weight = 0.0 
-        self.control_cost_weight = 0.1
+        self.control_cost_weight = 0.01
 
     def orientation_reward(self):
         orientation = self.data.qpos[3:7]
         orientation_des = np.array([1, 0, 0, 0])
-        return self.orientation_reward_weight * np.dot(orientation, orientation_des)
+
+        # Scale & offset so 0 ~ fall over, 1 ~ upright 
+        scaled_orientation = 3 * (np.dot(orientation, orientation_des) - 0.5)
+        return self.orientation_reward_weight * scaled_orientation
 
     def velocity_reward(self):
         return self.velocity_reward_weight * LA.norm(self.v_des - self.data.qvel[0:3])
@@ -74,6 +77,7 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         reward = self.velocity_reward() \
                 + self.orientation_reward() \
                 - self.control_cost(a) 
+        # print(f"\n vel_rew: {self.velocity_reward()}, ori_rew: {self.orientation_reward()}, control_cost: {self.control_cost(a)}")
                 
         # print("\n qpos:", self.data.qpos)
         # print("\n reward:", reward)
@@ -85,7 +89,12 @@ class EucEnv(MujocoEnv, utils.EzPickle):
         # done = bool(not np.isfinite(obs).all() or (obs[2] < 0))
         done = bool(not np.isfinite(obs).all())
         truncated = self.step_number > self.episode_len
-        return obs, reward, done, truncated, {}
+        info = {
+            "velocity_reward" : self.velocity_reward(),
+            "orientation_reward" : self.orientation_reward(),
+            "control_cost" : self.control_cost(a)
+        }
+        return obs, reward, done, truncated, info 
 
     # define what should happen when the model is reset (at the beginning of each episode)
     def reset_model(self):

@@ -14,16 +14,25 @@ class WbcWrapper(gym.Wrapper):
         ## specifically, 6dog body accel
         action_task_space_dim = 6
 
-        self.action_space = gym.spaces.Box(low=-1, high=1, shape=(action_task_space_dim,), dtype=np.float32)
+        ## TODO: check low and hi
+        self.action_space = gym.spaces.Box(low=-0.1, high=0.1, shape=(action_task_space_dim,), dtype=np.float32)
+
+        self.prev_action_joint_space = np.zeros(self.model.nu, dtype=np.float32)
+
+
 
     def step(self, action_task_space):
 
+        ## Clip the action to the action space
+        action_task_space = np.clip(action_task_space, self.action_space.low, self.action_space.high)
         ## Map task-space action to joint-space action using WBC
         action_joint_space = self.solve_qp(action_task_space)
 
         ## Step the environment as usual
         obs, reward, done, truncated, info = self.env.step(action_joint_space)
         return obs, reward, done, truncated, info
+
+
 
     def solve_qp(self, action_task_space):
 
@@ -46,7 +55,7 @@ class WbcWrapper(gym.Wrapper):
             if(contact.geom1 == wheel_body_id or contact.geom2 == wheel_body_id):
                 wheel_in_contact = True
                 contact_pos = contact.pos
-                print("\n wheel in contact\n")
+                # print("\n wheel in contact\n")
                 break
 
         J_c = np.zeros((3, self.env.model.nv))
@@ -104,11 +113,11 @@ class WbcWrapper(gym.Wrapper):
 
         ## Assemble the inequality constraint
         mu = 0.8
-        min_normal_force = 0.5
+        min_normal_force = 0.0
         ## TODO: change tau max
-        tau_max_hop = 200.0
         tau_max_twist = 200.0
-        tau_max_roll = 200.0
+        tau_max_hop = 2000.0
+        tau_max_roll = 100.0
 
         mu_over_root2 = (np.sqrt(2) / 2) * mu
         G_f = np.array([
@@ -170,13 +179,17 @@ class WbcWrapper(gym.Wrapper):
 
         
 
+        ## TODO: check that we arent requesting ridiculous forces
         ## Get task space command
         cmd = np.zeros(n_dc)
         # print(f"action_task_space: {action_task_space}")
         cmd[:6] = action_task_space # TODO: for now action_task_space is simply 6dof body accel
+        # print(f"\n cmd[:6]: {cmd[:6]}")
+        # print(f"\n cmd avg: {np.mean(cmd[:6])}")
 
         ## Task weights
-        W = np.eye(n_dc) # TODO: these are inputs, or are they?
+        W = np.zeros((n_dc, n_dc))
+        W[:6, :6] = np.eye(6) # TODO: these are inputs, or are they?
 
         ## Task jacobian
         J_t = np.eye(n_dc)
@@ -195,12 +208,26 @@ class WbcWrapper(gym.Wrapper):
         # A = np.array([1.0, 1.0, 1.0])
         # b = np.array([1.0])
 
-        print(f"A_eq {A_eq.shape}, b {b_eq.shape}, G {G.shape}, h {h.shape}")
+        # print(f"A_eq {A_eq.shape}, b {b_eq.shape}, G {G.shape}, h {h.shape}")
 
-        optimized_decision_variables = solve_qp(Q, b, G, h, A_eq, b_eq, solver="proxqp", verbose=True)
+        optimized_decision_variables = solve_qp(Q, b, G, h, A_eq, b_eq, solver="clarabel")
         # print("QP solution: ", optimized_decision_variables)
         if optimized_decision_variables is None:
-            print("QP solver failed to find a solution.")
+
+            print("\n QP solver failed to find a solution.")
+            print("\n Using previous action instead.")
+            return self.prev_action_joint_space
+
+        else:
+            action_joint_space = optimized_decision_variables[self.model.nv:self.model.nv+self.model.nu].astype(np.float32)
+            assert self.model.nu == 3
+
+            self.prev_action_joint_space = action_joint_space
+            assert action_joint_space.shape == (3, )
+
+            ## Convert from float64 to float32
+            return action_joint_space
+
         # if optimized_decision_variables is None:
         #     print("QP Solver failed to find a solution.")
         #     print("A_eq:", A_eq)
@@ -210,7 +237,3 @@ class WbcWrapper(gym.Wrapper):
         #     return None
 
         # print(f"QP solution: {optimized_decision_variables = }")
-        action_joint_space = optimized_decision_variables[self.model.nv:self.model.nv+self.model.nu]
-
-        ## Convert from float64 to float32
-        return action_joint_space.astype(np.float32)

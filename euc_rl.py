@@ -78,10 +78,17 @@ def test(model_path):
     for ep in range(episodes):
         obs = vec_env.reset()
         done = False
+
+        count = 0
         while not done:
             action, _state = model.predict(obs, deterministic=True)
             obs, reward, done, info = vec_env.step(action)
             vec_env.render("human")
+            # if count % 10 == 0:
+                # print(f"\n reward: {reward}")
+                # print(f"\n vel_rew: {info['velocity_reward']}")
+            #     print(f"\n reward: {reward}, vel_rew: {info['velocity_reward']}, orient_rew: {info['orientation_reward']}, control_cost: {info['control_cost']}")
+            count+=1
 
 
     env.close()
